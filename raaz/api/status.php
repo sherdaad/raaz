@@ -1,0 +1,3 @@
+<?php require __DIR__.'/../config/config.php';$u=login_required();clean_expired($pdo);
+if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$text=trim($_POST['content']??'');if($text===''||mb_strlen($text)>500)json_out(['error'=>'Status text must be 1–500 characters'],422);$s=$pdo->prepare("INSERT INTO statuses(user_id,type,content,expires_at) VALUES(?,'text',?,DATE_ADD(NOW(),INTERVAL 24 HOUR))");$s->execute([$u['id'],$text]);json_out(['ok'=>true]);}
+$s=$pdo->prepare('SELECT s.id,s.user_id,s.type,s.content,s.created_at,s.expires_at,u.username,u.full_name FROM statuses s JOIN users u ON u.id=s.user_id WHERE s.expires_at>NOW() ORDER BY s.created_at DESC');$s->execute();json_out($s->fetchAll());

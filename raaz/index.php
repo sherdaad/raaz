@@ -1,0 +1,1 @@
+<?php require __DIR__.'/config/config.php'; header('Location: '.(me()?'dashboard.php':'auth/login.php')); exit;

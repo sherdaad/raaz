@@ -1,0 +1,14 @@
+<?php require __DIR__.'/../config/config.php';
+$err='';
+if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();
+ $u=trim($_POST['username']??'');$n=trim($_POST['full_name']??'');$p=trim($_POST['phone']??'');$pw=$_POST['password']??'';$cf=$_POST['confirm_password']??'';$moderationAccepted=isset($_POST['moderation_notice']);
+ if(!preg_match('/^[A-Za-z0-9_]{3,30}$/',$u))$err='Username: 3–30 letters, numbers or underscore.';
+ elseif($n===''||mb_strlen($n)>80)$err='Enter a valid full name.';
+ elseif(!preg_match('/^[0-9+()\\-\\s]{7,24}$/',$p))$err='Enter a valid phone number.';
+ elseif(strlen($pw)<8)$err='Password must be at least 8 characters.';
+ elseif($pw!==$cf)$err='Passwords do not match.';
+ elseif(!$moderationAccepted)$err='Please read and accept the message moderation notice.';
+ else{$q=$pdo->prepare('SELECT id FROM users WHERE username=?');$q->execute([$u]);if($q->fetch())$err='Username already exists.';
+ else{$q=$pdo->prepare('INSERT INTO users(username,full_name,phone,password_hash,moderation_notice_accepted_at) VALUES(?,?,?,?,NOW())');$q->execute([$u,$n,$p,password_hash($pw,PASSWORD_DEFAULT)]);session_regenerate_id(true);$_SESSION['user']=['id'=>(int)$pdo->lastInsertId(),'username'=>$u,'full_name'=>$n];header('Location: ../dashboard.php');exit;}}
+}
+?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Join RAAZ</title><link rel="stylesheet" href="../assets/css/app.css"></head><body class="auth"><form class="authbox" method="post"><a class="logo" href="../">RAAZ<span>.</span></a><small>CREATE YOUR PRIVATE SPACE</small><h1>Create account</h1><?php if($err):?><p class="error"><?=e($err)?></p><?php endif?><input type="hidden" name="csrf" value="<?=e(csrf())?>"><label>Username</label><input name="username" required maxlength="30"><label>Full name</label><input name="full_name" required maxlength="80"><label>Phone</label><input name="phone" required maxlength="24"><label>Password</label><input type="password" name="password" required minlength="8"><label>Confirm password</label><input type="password" name="confirm_password" required minlength="8"><label class="consent"><input type="checkbox" name="moderation_notice" required> I understand that RAAZ messages are not end-to-end encrypted and authorized administrators may review message content for platform safety. Messages may disappear from my chat while a separate moderation copy is retained.</label><a href="../privacy.php" target="_blank" rel="noopener">Read the privacy and moderation notice</a><button class="primary">Create account</button><p class="sub">Already have an account? <a href="login.php">Sign in</a></p></form></body></html>

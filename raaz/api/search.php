@@ -1,0 +1,1 @@
+<?php require __DIR__.'/../config/config.php';$u=login_required();$q=trim($_GET['q']??'');if(strlen($q)<2)json_out([]);$s=$pdo->prepare("SELECT id,username,full_name,profile_picture FROM users WHERE account_status='active' AND id<>? AND username LIKE ? ORDER BY username LIMIT 20");$s->execute([$u['id'],$q.'%']);json_out($s->fetchAll());
